@@ -496,6 +496,8 @@ class MainActivity : AppCompatActivity() {
     private val gazeCallback = GazeCallback { gazeInfo ->
         processOnGaze(gazeInfo)
         Log.i(TAG, "check eyeMovement " + gazeInfo.eyeMovementState)
+        // 응시하는 좌표 출력
+        Log.i("checkCoordinate", "${gazeInfo.x},${gazeInfo.y}")
     }
     private val userStatusCallback: UserStatusCallback = object : UserStatusCallback {
         override fun onAttention(timestampBegin: Long, timestampEnd: Long, attentionScore: Float) {
@@ -503,6 +505,7 @@ class MainActivity : AppCompatActivity() {
             viewAttention!!.setAttention(attentionScore)
         }
 
+        // Blink 시 동작 지정
         override fun onBlink(
             timestamp: Long,
             isBlinkLeft: Boolean,
