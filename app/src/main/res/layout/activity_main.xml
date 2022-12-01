@@ -244,6 +244,7 @@
 
 
 
+
     <!-- 시선 좌표 -->
 
     <visual.camp.sample.view.PointView
@@ -260,6 +261,10 @@
 
     </visual.camp.sample.view.CalibrationViewer>
 
-    <include layout="@layout/layout_progress" />
+    <com.github.barteksc.pdfviewer.PDFView
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
