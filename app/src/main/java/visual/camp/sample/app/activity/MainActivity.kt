@@ -47,6 +47,7 @@ import android.view.View
 import android.widget.*
 import visual.camp.sample.app.activity.DemoActivity
 
+
 class MainActivity : AppCompatActivity() {
     private var gazeTrackerManager: GazeTrackerManager? = null
     private val viewLayoutChecker = ViewLayoutChecker()
@@ -202,6 +203,8 @@ class MainActivity : AppCompatActivity() {
     private var viewEyeBlink: EyeBlinkView? = null
     private var viewAttention: AttentionView? = null
     private var viewDrowsiness: DrowsinessView? = null
+    // 위치 좌표 출력
+    public var edit_T: TextView? = null
 
     // gaze coord filter
     private var swUseGazeFilter: SwitchCompat? = null
@@ -219,10 +222,10 @@ class MainActivity : AppCompatActivity() {
     private var rgAccuracy: RadioGroup? = null
     private var calibrationType = CalibrationModeType.DEFAULT
     private var criteria = AccuracyCriteria.DEFAULT
-    private var txtGazeVersion: AppCompatTextView? = null
+
     private fun initView() {
-        txtGazeVersion = findViewById(R.id.txt_gaze_version)
-        txtGazeVersion?.setText("version: " + GazeTracker.getVersionName())
+        edit_T = findViewById(R.id.edit_text)
+
         layoutProgress = findViewById(R.id.layout_progress)
         layoutProgress?.setOnClickListener(null)
         viewWarningTracking = findViewById(R.id.view_warning_tracking)
@@ -415,6 +418,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    // 시선 위치 표시
     private fun showGazePoint(x: Float, y: Float, type: ScreenState) {
         runOnUiThread {
             viewPoint!!.setType(if (type == ScreenState.INSIDE_OF_SCREEN) PointView.TYPE_DEFAULT else PointView.TYPE_OUT_OF_SCREEN)
@@ -493,10 +497,26 @@ class MainActivity : AppCompatActivity() {
     }
 
     private val oneEuroFilterManager = OneEuroFilterManager(2)
+
+    // 시선 좌표
+    var position_x: Float = 0F
+    var position_y: Float = 0F
+    // 두번 깜박임 카운트
+    var count = 0
+    // 두번 깜박임 시간 측정
+    var first_blink = System.currentTimeMillis()
+
     private val gazeCallback = GazeCallback { gazeInfo ->
         processOnGaze(gazeInfo)
         Log.i(TAG, "check eyeMovement " + gazeInfo.eyeMovementState)
+
         // 응시하는 좌표 출력
+        var co_x = "${gazeInfo.x.toString()}  ,  ${gazeInfo.y.toString()}"
+        position_x = gazeInfo.x
+        position_y = gazeInfo.y
+        edit_T?.text= co_x
+
+
         Log.i("checkCoordinate", "${gazeInfo.x},${gazeInfo.y}")
     }
     private val userStatusCallback: UserStatusCallback = object : UserStatusCallback {
@@ -520,6 +540,31 @@ class MainActivity : AppCompatActivity() {
             viewEyeBlink!!.setLeftEyeBlink(isBlinkLeft)
             viewEyeBlink!!.setRightEyeBlink(isBlinkRight)
             viewEyeBlink!!.setEyeBlink(isBlink)
+
+
+            // 2번 blink 시 시선 추적 중지
+
+            // 첫번째 깜박임
+            if(isBlink && count==0){
+                if(position_y < 1000){// 시선 위치 확인(화면 상단을 봐야지만 실행)
+                    Log.i("count","$count" )
+                    first_blink = System.currentTimeMillis()// 첫번째 깜박인 시간
+                    count=1
+                }
+
+            }else if(isBlink && count==1){// 두번째 깜박임
+                if(position_y < 1000){
+
+                    Log.i("count","$count" )
+                    var second_blink = System.currentTimeMillis()// 두번째 깜박인 시간
+                    var time_difference = second_blink-first_blink
+                    Log.i("time_differnece","$time_difference" )
+                    if(time_difference <3000){// 깜박임 시간 차에 따라 행동
+                        stopTracking()
+                    }
+                    count = 0
+                }
+            }
         }
 
         override fun onDrowsiness(timestamp: Long, isDrowsiness: Boolean) {
@@ -528,12 +573,14 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    // 시선 위치 좌표 표현
     private fun processOnGaze(gazeInfo: GazeInfo) {
         if (gazeInfo.trackingState == TrackingState.SUCCESS) {
             hideTrackingWarning()
             if (!gazeTrackerManager!!.isCalibrating) {
                 val filtered_gaze = filterGaze(gazeInfo)
                 showGazePoint(filtered_gaze[0], filtered_gaze[1], gazeInfo.screenState)
+
             }
         } else {
             showTrackingWarning()

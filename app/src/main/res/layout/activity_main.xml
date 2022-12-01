@@ -6,6 +6,7 @@
     android:layout_height="match_parent"
     tools:context=".activity.MainActivity">
 
+
     <TextureView
         android:id="@+id/preview"
         android:layout_width="match_parent"
@@ -49,6 +50,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 tools:visibility="invisible" />
+
 
         </LinearLayout>
 
@@ -110,7 +112,13 @@
                     android:layout_height="wrap_content"
                     android:text="gaze path demo" />
             </LinearLayout>
+
         </ScrollView>
+        <TextView
+            android:id="@+id/edit_text"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:text="hello"/>
     </LinearLayout>
 
     <LinearLayout
@@ -232,16 +240,10 @@
                 android:textColor="@android:color/holo_blue_bright" />
 
         </LinearLayout>
+
     </LinearLayout>
 
-    <androidx.appcompat.widget.AppCompatTextView
-        android:id="@+id/txt_gaze_version"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="version:"
-        android:textColor="@android:color/holo_blue_bright"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintLeft_toLeftOf="parent" />
+
 
     <!-- 시선 좌표 -->
 
@@ -255,6 +257,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:visibility="invisible">
+
 
     </visual.camp.sample.view.CalibrationViewer>
 
