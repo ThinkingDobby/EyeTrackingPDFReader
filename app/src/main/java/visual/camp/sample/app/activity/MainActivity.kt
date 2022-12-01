@@ -203,8 +203,6 @@ class MainActivity : AppCompatActivity() {
     private var viewEyeBlink: EyeBlinkView? = null
     private var viewAttention: AttentionView? = null
     private var viewDrowsiness: DrowsinessView? = null
-    // 위치 좌표 출력
-    public var edit_T: TextView? = null
 
     // gaze coord filter
     private var swUseGazeFilter: SwitchCompat? = null
@@ -212,7 +210,7 @@ class MainActivity : AppCompatActivity() {
     private var swStatusAttention: SwitchCompat? = null
     private var swStatusDrowsiness: SwitchCompat? = null
     private var isUseGazeFilter = true
-    private var isStatusBlink = false
+    private var isStatusBlink = true
     private var isStatusAttention = false
     private var isStatusDrowsiness = false
     private var activeStatusCount = 0
@@ -224,8 +222,6 @@ class MainActivity : AppCompatActivity() {
     private var criteria = AccuracyCriteria.DEFAULT
 
     private fun initView() {
-        edit_T = findViewById(R.id.edit_text)
-
         layoutProgress = findViewById(R.id.layout_progress)
         layoutProgress?.setOnClickListener(null)
         viewWarningTracking = findViewById(R.id.view_warning_tracking)
@@ -512,7 +508,6 @@ class MainActivity : AppCompatActivity() {
         var co_x = "${gazeInfo.x.toString()}  ,  ${gazeInfo.y.toString()}"
         position_x = gazeInfo.x
         position_y = gazeInfo.y
-        edit_T?.text= co_x
 
 
         Log.i("checkCoordinate", "${gazeInfo.x},${gazeInfo.y}")

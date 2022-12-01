@@ -6,6 +6,14 @@
     android:layout_height="match_parent"
     tools:context=".activity.MainActivity">
 
+    <com.github.barteksc.pdfviewer.PDFView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"/>
+
     <TextureView
         android:id="@+id/preview"
         android:layout_width="match_parent"
@@ -113,14 +121,10 @@
             </LinearLayout>
 
         </ScrollView>
-        <TextView
-            android:id="@+id/edit_text"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:text="hello"/>
     </LinearLayout>
 
     <LinearLayout
+        android:visibility="invisible"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="vertical"
@@ -242,9 +246,6 @@
 
     </LinearLayout>
 
-
-
-
     <!-- 시선 좌표 -->
 
     <visual.camp.sample.view.PointView
@@ -260,11 +261,5 @@
 
 
     </visual.camp.sample.view.CalibrationViewer>
-
-    <com.github.barteksc.pdfviewer.PDFView
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
