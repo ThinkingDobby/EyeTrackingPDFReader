@@ -45,7 +45,6 @@ import android.provider.Settings
 import android.util.Log
 import android.view.View
 import android.widget.*
-import visual.camp.sample.app.activity.DemoActivity
 
 
 class MainActivity : AppCompatActivity() {
@@ -58,6 +57,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         gazeTrackerManager = GazeTrackerManager.makeNewInstance(this)
         Log.i(TAG, "gazeTracker version: " + GazeTracker.getVersionName())
+
         initView()
         checkPermission()
         initHandler()
@@ -67,7 +67,7 @@ class MainActivity : AppCompatActivity() {
         super.onStart()
         if (preview!!.isAvailable) {
             // When if textureView available
-            gazeTrackerManager!!.setCameraPreview(preview)
+            gazeTrackerManager!!.setCameraPreview(preview!!)
         }
         gazeTrackerManager!!.setGazeTrackerCallbacks(
             gazeCallback,
@@ -94,7 +94,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onStop() {
         super.onStop()
-        gazeTrackerManager!!.removeCameraPreview(preview)
+        gazeTrackerManager!!.removeCameraPreview(preview!!)
         gazeTrackerManager!!.removeCallbacks(
             gazeCallback,
             calibrationCallback,
@@ -341,7 +341,7 @@ class MainActivity : AppCompatActivity() {
     private val surfaceTextureListener: SurfaceTextureListener = object : SurfaceTextureListener {
         override fun onSurfaceTextureAvailable(surface: SurfaceTexture, width: Int, height: Int) {
             // When if textureView available
-            gazeTrackerManager!!.setCameraPreview(preview)
+            gazeTrackerManager!!.setCameraPreview(preview!!)
         }
 
         override fun onSurfaceTextureSizeChanged(
@@ -403,8 +403,6 @@ class MainActivity : AppCompatActivity() {
             stopCalibration()
         } else if (v === btnSetCalibration) {
             setCalibration()
-        } else if (v === btnGuiDemo) {
-            showGuiDemo()
         }
     }
 
@@ -706,11 +704,6 @@ class MainActivity : AppCompatActivity() {
             )
         }
         setViewAtGazeTrackerState()
-    }
-
-    private fun showGuiDemo() {
-        val intent = Intent(applicationContext, DemoActivity::class.java)
-        startActivity(intent)
     }
 
     companion object {
