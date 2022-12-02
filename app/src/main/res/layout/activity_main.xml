@@ -12,6 +12,7 @@
         android:layout_height="match_parent" />
 
     <com.github.barteksc.pdfviewer.PDFView
+        android:id="@+id/main_pdfview"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         app:layout_constraintTop_toTopOf="parent"

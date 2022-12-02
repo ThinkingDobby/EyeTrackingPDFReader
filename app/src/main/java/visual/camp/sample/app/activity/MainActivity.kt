@@ -12,7 +12,10 @@ import android.util.Log
 import android.view.TextureView
 import android.view.TextureView.SurfaceTextureListener
 import android.view.View
-import android.widget.*
+import android.widget.CompoundButton
+import android.widget.RadioButton
+import android.widget.RadioGroup
+import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SwitchCompat
@@ -25,6 +28,8 @@ import camp.visual.gazetracker.gaze.GazeInfo
 import camp.visual.gazetracker.state.ScreenState
 import camp.visual.gazetracker.state.TrackingState
 import camp.visual.gazetracker.util.ViewLayoutChecker
+import com.github.barteksc.pdfviewer.PDFView
+import com.github.barteksc.pdfviewer.scroll.DefaultScrollHandle
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -49,6 +54,8 @@ class MainActivity : AppCompatActivity() {
         initView()
         checkPermission()
         initHandler()
+
+        val pdfView = findViewById<PDFView>(R.id.main_pdfview)
 
         GlobalScope.launch {
             initGaze()
@@ -644,6 +651,18 @@ class MainActivity : AppCompatActivity() {
             )
         }
         setViewAtGazeTrackerState()
+    }
+
+    private fun displayFromAsset(assetFileName: String, pdfView: PDFView, pageNumber: Int) {
+        val pdfFileName = assetFileName
+        pdfView.fromAsset(assetFileName)
+            .defaultPage(pageNumber)
+//            .onPageChange(this)
+            .enableAnnotationRendering(true)
+//            .onLoad(this)
+            .scrollHandle(DefaultScrollHandle(this))
+            .spacing(10) // in dp\
+            .load()
     }
 
     companion object {
