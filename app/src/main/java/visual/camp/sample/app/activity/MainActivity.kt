@@ -1,50 +1,38 @@
 package visual.camp.sample.app.activity
 
 import android.Manifest
-import androidx.appcompat.app.AppCompatActivity
-import visual.camp.sample.app.GazeTrackerManager
-import camp.visual.gazetracker.util.ViewLayoutChecker
-import android.os.HandlerThread
-import android.os.Bundle
-import visual.camp.sample.app.R
-import visual.camp.sample.app.activity.MainActivity
-import camp.visual.gazetracker.GazeTracker
-import android.os.Build
-import androidx.annotation.RequiresApi
-import androidx.core.content.ContextCompat
 import android.content.pm.PackageManager
-import android.view.TextureView
-import visual.camp.sample.view.PointView
-import visual.camp.sample.view.CalibrationViewer
-import visual.camp.sample.view.EyeBlinkView
-import visual.camp.sample.view.AttentionView
-import visual.camp.sample.view.DrowsinessView
-import androidx.appcompat.widget.SwitchCompat
-import camp.visual.gazetracker.constant.CalibrationModeType
-import camp.visual.gazetracker.constant.AccuracyCriteria
-import androidx.appcompat.widget.AppCompatTextView
-import android.view.TextureView.SurfaceTextureListener
 import android.graphics.SurfaceTexture
-import camp.visual.gazetracker.util.ViewLayoutChecker.ViewLayoutListener
-import camp.visual.gazetracker.state.ScreenState
-import camp.visual.gazetracker.callback.InitializationCallback
-import camp.visual.gazetracker.constant.InitializationErrorType
-import camp.visual.gazetracker.filter.OneEuroFilterManager
-import camp.visual.gazetracker.callback.GazeCallback
-import camp.visual.gazetracker.gaze.GazeInfo
-import camp.visual.gazetracker.callback.UserStatusCallback
-import camp.visual.gazetracker.state.TrackingState
-import camp.visual.gazetracker.callback.CalibrationCallback
-import camp.visual.gazetracker.callback.StatusCallback
-import camp.visual.gazetracker.constant.StatusErrorType
-import camp.visual.gazetracker.constant.UserStatusOption
-import visual.camp.sample.app.GazeTrackerManager.LoadCalibrationResult
-import android.content.Intent
+import android.os.Build
+import android.os.Bundle
 import android.os.Handler
+import android.os.HandlerThread
 import android.provider.Settings
 import android.util.Log
+import android.view.TextureView
+import android.view.TextureView.SurfaceTextureListener
 import android.view.View
 import android.widget.*
+import androidx.annotation.RequiresApi
+import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.SwitchCompat
+import androidx.core.content.ContextCompat
+import camp.visual.gazetracker.GazeTracker
+import camp.visual.gazetracker.callback.*
+import camp.visual.gazetracker.constant.*
+import camp.visual.gazetracker.filter.OneEuroFilterManager
+import camp.visual.gazetracker.gaze.GazeInfo
+import camp.visual.gazetracker.state.ScreenState
+import camp.visual.gazetracker.state.TrackingState
+import camp.visual.gazetracker.util.ViewLayoutChecker
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import visual.camp.sample.app.GazeTrackerManager
+import visual.camp.sample.app.GazeTrackerManager.LoadCalibrationResult
+import visual.camp.sample.app.R
+import visual.camp.sample.app.activity.MainActivity
+import visual.camp.sample.view.*
 
 
 class MainActivity : AppCompatActivity() {
@@ -61,6 +49,11 @@ class MainActivity : AppCompatActivity() {
         initView()
         checkPermission()
         initHandler()
+
+        GlobalScope.launch {
+            initGaze()
+            startTracking()
+        }
     }
 
     override fun onStart() {
@@ -191,14 +184,6 @@ class MainActivity : AppCompatActivity() {
     private var layoutProgress: View? = null
     private var viewWarningTracking: View? = null
     private var viewPoint: PointView? = null
-    private var btnInitGaze: Button? = null
-    private var btnReleaseGaze: Button? = null
-    private var btnStartTracking: Button? = null
-    private var btnStopTracking: Button? = null
-    private var btnStartCalibration: Button? = null
-    private var btnStopCalibration: Button? = null
-    private var btnSetCalibration: Button? = null
-    private var btnGuiDemo: Button? = null
     private var viewCalibration: CalibrationViewer? = null
     private var viewEyeBlink: EyeBlinkView? = null
     private var viewAttention: AttentionView? = null
@@ -227,22 +212,6 @@ class MainActivity : AppCompatActivity() {
         viewWarningTracking = findViewById(R.id.view_warning_tracking)
         preview = findViewById(R.id.preview)
         preview?.setSurfaceTextureListener(surfaceTextureListener)
-        btnInitGaze = findViewById(R.id.btn_init_gaze)
-        btnReleaseGaze = findViewById(R.id.btn_release_gaze)
-        btnInitGaze?.setOnClickListener(onClickListener)
-        btnReleaseGaze?.setOnClickListener(onClickListener)
-        btnStartTracking = findViewById(R.id.btn_start_tracking)
-        btnStopTracking = findViewById(R.id.btn_stop_tracking)
-        btnStartTracking?.setOnClickListener(onClickListener)
-        btnStopTracking?.setOnClickListener(onClickListener)
-        btnStartCalibration = findViewById(R.id.btn_start_calibration)
-        btnStopCalibration = findViewById(R.id.btn_stop_calibration)
-        btnStartCalibration?.setOnClickListener(onClickListener)
-        btnStopCalibration?.setOnClickListener(onClickListener)
-        btnSetCalibration = findViewById(R.id.btn_set_calibration)
-        btnSetCalibration?.setOnClickListener(onClickListener)
-        btnGuiDemo = findViewById(R.id.btn_gui_demo)
-        btnGuiDemo?.setOnClickListener(onClickListener)
         viewPoint = findViewById(R.id.view_point)
         viewCalibration = findViewById(R.id.view_calibration)
         swUseGazeFilter = findViewById(R.id.sw_use_gaze_filter)
@@ -384,24 +353,6 @@ class MainActivity : AppCompatActivity() {
         runOnUiThread { viewWarningTracking!!.visibility = View.INVISIBLE }
     }
 
-    private val onClickListener = View.OnClickListener { v ->
-        if (v === btnInitGaze) {
-            initGaze()
-        } else if (v === btnReleaseGaze) {
-            releaseGaze()
-        } else if (v === btnStartTracking) {
-            startTracking()
-        } else if (v === btnStopTracking) {
-            stopTracking()
-        } else if (v === btnStartCalibration) {
-            startCalibration()
-        } else if (v === btnStopCalibration) {
-            stopCalibration()
-        } else if (v === btnSetCalibration) {
-            setCalibration()
-        }
-    }
-
     private fun showToast(msg: String, isShort: Boolean) {
         runOnUiThread {
             Toast.makeText(
@@ -440,13 +391,6 @@ class MainActivity : AppCompatActivity() {
     private fun setViewAtGazeTrackerState() {
         Log.i(TAG, "gaze : $isTrackerValid, tracking $isTracking")
         runOnUiThread {
-            btnInitGaze!!.isEnabled = !isTrackerValid
-            btnReleaseGaze!!.isEnabled = isTrackerValid
-            btnStartTracking!!.isEnabled = isTrackerValid && !isTracking
-            btnStopTracking!!.isEnabled = isTracking
-            btnStartCalibration!!.isEnabled = isTracking
-            btnStopCalibration!!.isEnabled = isTracking
-            btnSetCalibration!!.isEnabled = isTrackerValid
             if (!isTracking) {
                 hideCalibrationView()
             }
@@ -628,7 +572,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun initGaze() {
+    private suspend fun initGaze() {
         showProgress()
         val userStatusOption = UserStatusOption()
         if (isStatusAttention) {
@@ -646,6 +590,7 @@ class MainActivity : AppCompatActivity() {
         )
         gazeTrackerManager!!.initGazeTracker(initializationCallback, userStatusOption)
         setStatusSwitchState(false)
+        delay(2500)
     }
 
     private fun releaseGaze() {
