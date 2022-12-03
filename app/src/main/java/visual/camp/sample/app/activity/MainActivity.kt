@@ -51,6 +51,11 @@ class MainActivity : AppCompatActivity() {
     private var pdfFileUri: Uri? = null
     private var pdfView: PDFView? = null
 
+    private var firstBlink = 0L
+    private var posX = 0F
+    private var posY = 0F
+    private var count = 0
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -385,6 +390,7 @@ class MainActivity : AppCompatActivity() {
         runOnUiThread {
             viewPoint!!.setType(if (type == ScreenState.INSIDE_OF_SCREEN) PointView.TYPE_DEFAULT else PointView.TYPE_OUT_OF_SCREEN)
             viewPoint!!.setPosition(x, y)
+            viewPoint!!.hideLine()
         }
     }
 
@@ -453,33 +459,17 @@ class MainActivity : AppCompatActivity() {
 
     private val oneEuroFilterManager = OneEuroFilterManager(2)
 
-    // 시선 좌표
-    var position_x: Float = 0F
-    var position_y: Float = 0F
-    // 두번 깜박임 카운트
-    var count = 0
-    // 두번 깜박임 시간 측정
-    var first_blink = System.currentTimeMillis()
-
     private val gazeCallback = GazeCallback { gazeInfo ->
         processOnGaze(gazeInfo)
-//        Log.i(TAG, "check eyeMovement " + gazeInfo.eyeMovementState)
-
-        // 응시하는 좌표 출력
-        var co_x = "${gazeInfo.x.toString()}  ,  ${gazeInfo.y.toString()}"
-        position_x = gazeInfo.x
-        position_y = gazeInfo.y
-
-
+        posX = gazeInfo.x
+        posY = gazeInfo.y
 //        Log.i("checkCoordinate", "${gazeInfo.x},${gazeInfo.y}")
     }
     private val userStatusCallback: UserStatusCallback = object : UserStatusCallback {
         override fun onAttention(timestampBegin: Long, timestampEnd: Long, attentionScore: Float) {
-//            Log.i(TAG, "check User Status Attention Rate $attentionScore")
             viewAttention!!.setAttention(attentionScore)
         }
 
-        // Blink 시 동작 지정
         override fun onBlink(
             timestamp: Long,
             isBlinkLeft: Boolean,
@@ -487,34 +477,28 @@ class MainActivity : AppCompatActivity() {
             isBlink: Boolean,
             eyeOpenness: Float
         ) {
-//            Log.i(TAG, "check User Status Blink Left: $isBlinkLeft, Right: $isBlinkRight, Blink: $isBlink, eyeOpenness: $eyeOpenness")
             viewEyeBlink!!.setLeftEyeBlink(isBlinkLeft)
             viewEyeBlink!!.setRightEyeBlink(isBlinkRight)
             viewEyeBlink!!.setEyeBlink(isBlink)
 
-
-            // 2번 blink 시 시선 추적 중지
-
-            // 첫번째 깜박임
-            if(isBlink && count==0){
-                if(position_y < 1000){// 시선 위치 확인(화면 상단을 봐야지만 실행)
+//           2번 blink 시 시선 추적 중지
+            if(isBlink && count == 0){ // 첫번째 깜박임
+                if(posY < 1000){  // 시선 위치 확인(화면 상단을 봐야지만 실행)
                     Log.i("count","$count" )
-                    first_blink = System.currentTimeMillis()// 첫번째 깜박인 시간
-                    count=1
+                    firstBlink = System.currentTimeMillis()// 첫번째 깜박인 시간
+                    count = 1
                 }
-
-            }else if(isBlink && count==1){// 두번째 깜박임
-                if(position_y < 1000){
-
-                    Log.i("count","$count" )
-                    var second_blink = System.currentTimeMillis()// 두번째 깜박인 시간
-                    var time_difference = second_blink-first_blink
-                    Log.i("time_differnece","$time_difference" )
-                    if(time_difference <3000){// 깜박임 시간 차에 따라 행동
+            } else if (isBlink && count==1){  // 두번째 깜박임
+                if(posY < 1000){
+                    val now = System.currentTimeMillis()// 두번째 깜박인 시간
+                    val timeDifference = now - firstBlink
+                    Log.i("time_differnece","$timeDifference" )
+                    if (timeDifference < 3000) {// 깜박임 시간 차에 따라 행동
                         stopTracking()
+                        Log.i("count","$count" )
                     }
-                    count = 0
                 }
+                count = 0
             }
         }
 
@@ -689,26 +673,6 @@ class MainActivity : AppCompatActivity() {
             .spacing(10) // in dp
 //            .onPageError(this)
             .load()
-    }
-
-    fun getFileName(uri: Uri): String? {
-        var result: String? = null
-        if (uri.scheme == "content") {
-            val cursor: Cursor? = contentResolver.query(uri, null, null, null, null)
-            try {
-                if (cursor != null && cursor.moveToFirst()) {
-                    result = cursor.getString(cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME))
-                }
-            } finally {
-                if (cursor != null) {
-                    cursor.close()
-                }
-            }
-        }
-        if (result == null) {
-            result = uri.lastPathSegment
-        }
-        return result
     }
 
     companion object {
