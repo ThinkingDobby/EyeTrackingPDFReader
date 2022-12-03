@@ -3,12 +3,14 @@ package visual.camp.sample.app.activity
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.database.Cursor
 import android.graphics.SurfaceTexture
 import android.net.Uri
-import android.os.*
-import android.provider.OpenableColumns
+import android.os.Build
+import android.os.Bundle
+import android.os.Handler
+import android.os.HandlerThread
 import android.provider.Settings
+import android.util.DisplayMetrics
 import android.util.Log
 import android.view.TextureView
 import android.view.TextureView.SurfaceTextureListener
@@ -39,7 +41,6 @@ import visual.camp.sample.app.GazeTrackerManager.LoadCalibrationResult
 import visual.camp.sample.app.R
 import visual.camp.sample.app.activity.MainActivity
 import visual.camp.sample.view.*
-import java.io.File
 
 
 class MainActivity : AppCompatActivity() {
@@ -66,8 +67,6 @@ class MainActivity : AppCompatActivity() {
         checkPermission()
         initHandler()
 
-//        val EXTERNAL_STORAGE = filesDir
-//        Log.d("storagePath", EXTERNAL_STORAGE.path)
         getFileFromStorage()
 
         GlobalScope.launch {
@@ -481,26 +480,16 @@ class MainActivity : AppCompatActivity() {
             viewEyeBlink!!.setRightEyeBlink(isBlinkRight)
             viewEyeBlink!!.setEyeBlink(isBlink)
 
-//           2번 blink 시 시선 추적 중지
-            if(isBlink && count == 0){ // 첫번째 깜박임
-                if(posY < 1000){  // 시선 위치 확인(화면 상단을 봐야지만 실행)
-                    Log.i("count","$count" )
-                    firstBlink = System.currentTimeMillis()// 첫번째 깜박인 시간
-                    count = 1
+            val nowPage = pdfView!!.currentPage
+            if (isBlink) {
+                runOnUiThread {
+                    Log.d("size", posY.toString())
+                    if (posY > 1000) pdfView!!.jumpTo(nowPage + 1)
+                    else pdfView!!.jumpTo(nowPage - 1)
                 }
-            } else if (isBlink && count==1){  // 두번째 깜박임
-                if(posY < 1000){
-                    val now = System.currentTimeMillis()// 두번째 깜박인 시간
-                    val timeDifference = now - firstBlink
-                    Log.i("time_differnece","$timeDifference" )
-                    if (timeDifference < 3000) {// 깜박임 시간 차에 따라 행동
-                        stopTracking()
-                        Log.i("count","$count" )
-                    }
-                }
-                count = 0
             }
         }
+
 
         override fun onDrowsiness(timestamp: Long, isDrowsiness: Boolean) {
             Log.i(TAG, "check User Status Drowsiness $isDrowsiness")
