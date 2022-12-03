@@ -1,12 +1,13 @@
 package visual.camp.sample.app.activity
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.database.Cursor
 import android.graphics.SurfaceTexture
-import android.os.Build
-import android.os.Bundle
-import android.os.Handler
-import android.os.HandlerThread
+import android.net.Uri
+import android.os.*
+import android.provider.OpenableColumns
 import android.provider.Settings
 import android.util.Log
 import android.view.TextureView
@@ -38,6 +39,7 @@ import visual.camp.sample.app.GazeTrackerManager.LoadCalibrationResult
 import visual.camp.sample.app.R
 import visual.camp.sample.app.activity.MainActivity
 import visual.camp.sample.view.*
+import java.io.File
 
 
 class MainActivity : AppCompatActivity() {
@@ -45,6 +47,10 @@ class MainActivity : AppCompatActivity() {
     private val viewLayoutChecker = ViewLayoutChecker()
     private val backgroundThread = HandlerThread("background")
     private var backgroundHandler: Handler? = null
+
+    private var pdfFileUri: Uri? = null
+    private var pdfView: PDFView? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -55,7 +61,9 @@ class MainActivity : AppCompatActivity() {
         checkPermission()
         initHandler()
 
-        val pdfView = findViewById<PDFView>(R.id.main_pdfview)
+//        val EXTERNAL_STORAGE = filesDir
+//        Log.d("storagePath", EXTERNAL_STORAGE.path)
+        getFileFromStorage()
 
         GlobalScope.launch {
             initGaze()
@@ -234,6 +242,8 @@ class MainActivity : AppCompatActivity() {
         swStatusBlink?.setChecked(isStatusBlink)
         swStatusAttention?.setChecked(isStatusAttention)
         swStatusDrowsiness?.setChecked(isStatusDrowsiness)
+        pdfView = findViewById(R.id.main_pdfview)
+
         val rbCalibrationOne = findViewById<RadioButton>(R.id.rb_calibration_one)
         val rbCalibrationFive = findViewById<RadioButton>(R.id.rb_calibration_five)
         val rbCalibrationSix = findViewById<RadioButton>(R.id.rb_calibration_six)
@@ -453,7 +463,7 @@ class MainActivity : AppCompatActivity() {
 
     private val gazeCallback = GazeCallback { gazeInfo ->
         processOnGaze(gazeInfo)
-        Log.i(TAG, "check eyeMovement " + gazeInfo.eyeMovementState)
+//        Log.i(TAG, "check eyeMovement " + gazeInfo.eyeMovementState)
 
         // 응시하는 좌표 출력
         var co_x = "${gazeInfo.x.toString()}  ,  ${gazeInfo.y.toString()}"
@@ -461,11 +471,11 @@ class MainActivity : AppCompatActivity() {
         position_y = gazeInfo.y
 
 
-        Log.i("checkCoordinate", "${gazeInfo.x},${gazeInfo.y}")
+//        Log.i("checkCoordinate", "${gazeInfo.x},${gazeInfo.y}")
     }
     private val userStatusCallback: UserStatusCallback = object : UserStatusCallback {
         override fun onAttention(timestampBegin: Long, timestampEnd: Long, attentionScore: Float) {
-            Log.i(TAG, "check User Status Attention Rate $attentionScore")
+//            Log.i(TAG, "check User Status Attention Rate $attentionScore")
             viewAttention!!.setAttention(attentionScore)
         }
 
@@ -477,10 +487,7 @@ class MainActivity : AppCompatActivity() {
             isBlink: Boolean,
             eyeOpenness: Float
         ) {
-            Log.i(
-                TAG,
-                "check User Status Blink Left: $isBlinkLeft, Right: $isBlinkRight, Blink: $isBlink, eyeOpenness: $eyeOpenness"
-            )
+//            Log.i(TAG, "check User Status Blink Left: $isBlinkLeft, Right: $isBlinkRight, Blink: $isBlink, eyeOpenness: $eyeOpenness")
             viewEyeBlink!!.setLeftEyeBlink(isBlinkLeft)
             viewEyeBlink!!.setRightEyeBlink(isBlinkRight)
             viewEyeBlink!!.setEyeBlink(isBlink)
@@ -653,22 +660,63 @@ class MainActivity : AppCompatActivity() {
         setViewAtGazeTrackerState()
     }
 
-    private fun displayFromAsset(assetFileName: String, pdfView: PDFView, pageNumber: Int) {
-        val pdfFileName = assetFileName
-        pdfView.fromAsset(assetFileName)
+    private fun getFileFromStorage() {
+        val intent = Intent()
+        intent.type = "application/pdf"
+        intent.action = Intent.ACTION_OPEN_DOCUMENT
+
+        startActivityForResult(Intent.createChooser(intent, "get file"), 0)
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == 0 && resultCode == RESULT_OK) {
+            if (data != null) {
+                pdfFileUri = data.data
+                displayPDFFromUri(pdfFileUri!!, 0)
+                Log.e("uri", pdfFileUri.toString())
+            }
+        }
+    }
+
+    private fun displayPDFFromUri(uri: Uri, pageNumber: Int) {
+        pdfView!!.fromUri(uri)
             .defaultPage(pageNumber)
 //            .onPageChange(this)
             .enableAnnotationRendering(true)
 //            .onLoad(this)
             .scrollHandle(DefaultScrollHandle(this))
-            .spacing(10) // in dp\
+            .spacing(10) // in dp
+//            .onPageError(this)
             .load()
+    }
+
+    fun getFileName(uri: Uri): String? {
+        var result: String? = null
+        if (uri.scheme == "content") {
+            val cursor: Cursor? = contentResolver.query(uri, null, null, null, null)
+            try {
+                if (cursor != null && cursor.moveToFirst()) {
+                    result = cursor.getString(cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME))
+                }
+            } finally {
+                if (cursor != null) {
+                    cursor.close()
+                }
+            }
+        }
+        if (result == null) {
+            result = uri.lastPathSegment
+        }
+        return result
     }
 
     companion object {
         private val TAG = MainActivity::class.java.simpleName
         private val PERMISSIONS = arrayOf(
-            Manifest.permission.CAMERA // 시선 추적 input
+            Manifest.permission.CAMERA, // 시선 추적 input
+            Manifest.permission.READ_EXTERNAL_STORAGE,
+            Manifest.permission.WRITE_EXTERNAL_STORAGE
         )
         private const val REQ_PERMISSION = 1000
     }
