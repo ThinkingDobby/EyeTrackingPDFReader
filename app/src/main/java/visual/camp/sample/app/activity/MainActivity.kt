@@ -481,12 +481,26 @@ class MainActivity : AppCompatActivity() {
             viewEyeBlink!!.setEyeBlink(isBlink)
 
             val nowPage = pdfView!!.currentPage
-            if (isBlink) {
-                runOnUiThread {
-                    Log.d("size", posY.toString())
-                    if (posY > 1000) pdfView!!.jumpTo(nowPage + 1)
-                    else pdfView!!.jumpTo(nowPage - 1)
+            if (isBlink && count == 0) {// 첫번째 깜박임
+                firstBlink = System.nanoTime()
+                Log.i("count", "$count")
+                count = 1
+
+            } else if (isBlink && count == 1) {// 두번째 깜박임
+                var secondBlink = 0L
+                secondBlink = System.nanoTime()
+                var timeDifference = secondBlink - firstBlink// 깜박임 시간 차 계산
+                Log.i("count", "$count")
+                Log.i("difference", "diffenece: $timeDifference")
+
+                Log.d("size", posY.toString())
+                if (timeDifference < 150000) {// 동시에 두번 깜박임 감지
+                    runOnUiThread {
+                        if (posY > 1000) pdfView!!.jumpTo(nowPage + 1)
+                        else pdfView!!.jumpTo(nowPage - 1)
+                    }
                 }
+                count = 0
             }
         }
 
