@@ -10,7 +10,6 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.HandlerThread
 import android.provider.Settings
-import android.util.DisplayMetrics
 import android.util.Log
 import android.view.TextureView
 import android.view.TextureView.SurfaceTextureListener
@@ -458,11 +457,23 @@ class MainActivity : AppCompatActivity() {
 
     private val oneEuroFilterManager = OneEuroFilterManager(2)
 
+    var minX = Float.MAX_VALUE
+    var minY = Float.MAX_VALUE
+    var maxX = Float.MIN_VALUE
+    var maxY = Float.MIN_VALUE
+
     private val gazeCallback = GazeCallback { gazeInfo ->
         processOnGaze(gazeInfo)
         posX = gazeInfo.x
         posY = gazeInfo.y
 //        Log.i("checkCoordinate", "${gazeInfo.x},${gazeInfo.y}")
+
+        if (!posX.isNaN() && !posY.isNaN()) {
+            minX = minOf(minX, posX)
+            maxX = maxOf(maxX, posX)
+            minY = minOf(minY, posY)
+            maxY = maxOf(maxY, posY)
+        }
     }
     private val userStatusCallback: UserStatusCallback = object : UserStatusCallback {
         override fun onAttention(timestampBegin: Long, timestampEnd: Long, attentionScore: Float) {
@@ -480,6 +491,8 @@ class MainActivity : AppCompatActivity() {
             viewEyeBlink!!.setRightEyeBlink(isBlinkRight)
             viewEyeBlink!!.setEyeBlink(isBlink)
 
+            Log.d("posX", posX.toString())
+            Log.d("posY", posY.toString())
             val nowPage = pdfView!!.currentPage
             if (isBlink && count == 0) {// 첫번째 깜박임
                 firstBlink = System.nanoTime()
@@ -500,7 +513,29 @@ class MainActivity : AppCompatActivity() {
                         else pdfView!!.jumpTo(nowPage - 1)
                     }
                 }
+                /*
+
+                Screen width, height 는 픽셀 기준으로 인식할 것
+
+                x, y 좌표를 화면 크기 반영해 적용시켜야
+                버튼 위치에 따른 동작 구현 필요
+                설정 화면 별도 구성 - 기능 추가는 고려할 것
+                스크롤바 디자인 고려
+
+                인식 정확도 향상
+                보정 기능 기본 제공 고려
+
+
+                 */
+
+
                 count = 0
+//                Log.d("pos", "$minX $maxX $minY $maxY")
+                val metrics = resources.displayMetrics
+                val screenHeight = metrics.heightPixels
+                val screenWidth = metrics.widthPixels
+//                Log.d("posScreen", screenHeight.toString())
+//                Log.d("posScreen", screenWidth.toString())
             }
         }
 
