@@ -15,13 +15,11 @@ import android.util.TypedValue
 import android.view.TextureView
 import android.view.TextureView.SurfaceTextureListener
 import android.view.View
-import android.widget.CompoundButton
-import android.widget.RadioButton
-import android.widget.RadioGroup
-import android.widget.Toast
+import android.widget.*
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SwitchCompat
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
 import camp.visual.gazetracker.GazeTracker
 import camp.visual.gazetracker.callback.*
@@ -57,7 +55,6 @@ class MainActivity : AppCompatActivity() {
     private var count = 0
     private var viewType = "pdf"
 
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -73,7 +70,6 @@ class MainActivity : AppCompatActivity() {
         GlobalScope.launch {
             initGaze()
             startTracking()
-            startCalibration() // 초점 맞추기
         }
     }
 
@@ -209,6 +205,13 @@ class MainActivity : AppCompatActivity() {
     private var viewEyeBlink: EyeBlinkView? = null
     private var viewAttention: AttentionView? = null
     private var viewDrowsiness: DrowsinessView? = null
+    private var settingScreen: ConstraintLayout? = null
+    private var loadScreen: ConstraintLayout? = null
+    private var btnLoad: ConstraintLayout? = null
+    private var btnSetting: ConstraintLayout? = null
+    private var btnBack: ConstraintLayout? = null
+    private var btnCalibration: ConstraintLayout? = null
+
 
     // gaze coord filter
     private var swUseGazeFilter: SwitchCompat? = null
@@ -249,6 +252,12 @@ class MainActivity : AppCompatActivity() {
         swStatusAttention?.setChecked(isStatusAttention)
         swStatusDrowsiness?.setChecked(isStatusDrowsiness)
         pdfView = findViewById(R.id.main_pdfview)
+        settingScreen = findViewById(R.id.main_cl_setting)
+//        loadScreen = findViewById(R.id.)
+        btnLoad = findViewById(R.id.main_btn_load)
+        btnSetting = findViewById(R.id.main_btn_setting)
+        btnBack = findViewById(R.id.main_btn_back)
+        btnCalibration = findViewById(R.id.main_btn_calibration)
 
         val rbCalibrationOne = findViewById<RadioButton>(R.id.rb_calibration_one)
         val rbCalibrationFive = findViewById<RadioButton>(R.id.rb_calibration_five)
@@ -271,6 +280,16 @@ class MainActivity : AppCompatActivity() {
         hideProgress()
         setOffsetOfView()
         setViewAtGazeTrackerState()
+
+        btnLoad!!.setOnClickListener { getFileFromStorage() }
+        btnSetting!!.setOnClickListener {
+            settingScreen!!.visibility = View.VISIBLE
+        }
+        btnBack!!.setOnClickListener {
+            stopCalibration()
+            settingScreen!!.visibility = View.INVISIBLE
+        }
+        btnCalibration!!.setOnClickListener { startCalibration() }
     }
 
     private val onCheckedChangeRadioButton =
@@ -497,7 +516,7 @@ class MainActivity : AppCompatActivity() {
             val screenWidth = resources.displayMetrics.widthPixels
             val screenHeight = resources.displayMetrics.heightPixels
 
-            val optionHeight = dpToPx(dp=90F)
+            val optionHeight = dpToPx(dp=120F)
             val nowPage = pdfView!!.currentPage
 
             if (isBlink && count == 0) {// 첫번째 깜박임
@@ -516,10 +535,11 @@ class MainActivity : AppCompatActivity() {
                 if (timeDifference < 200000) {// 동시에 두번 깜박임 감지
                     when (viewType){
                         "pdf" -> runOnUiThread {
-                        if (posY < (screenHeight/2)) pdfView!!.jumpTo(nowPage - 1) // 이전 페이지 이동
+                        if (posY < (screenHeight / 2)) pdfView!!.jumpTo(nowPage - 1) // 이전 페이지 이동
                         else if(posY <(screenHeight-optionHeight)) pdfView!!.jumpTo(nowPage + 1) // 다음 페이지 이동
-                        else if(posX <(screenWidth/2)) {viewType = "folder" // pdf 문서 불러오기
-                             }
+                        else if(posX <(screenWidth / 2)) {
+                            viewType = "folder" // pdf 문서 불러오기
+                        }
                         else {  // 환경설정
                             viewType = "setting"
                          }
@@ -696,7 +716,7 @@ class MainActivity : AppCompatActivity() {
             if (data != null) {
                 pdfFileUri = data.data
                 displayPDFFromUri(pdfFileUri!!, 0)
-                Log.e("uri", pdfFileUri.toString())
+                Log.d("uri", pdfFileUri.toString())
             }
         }
     }

@@ -27,6 +27,7 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_marginBottom="-10dp"
+        android:background="#fefefe"
         android:visibility="invisible"
         app:layout_constraintBottom_toTopOf="@id/main_bottom"
         app:layout_constraintEnd_toEndOf="parent"
@@ -48,6 +49,7 @@
             app:layout_constraintTop_toTopOf="parent"/>
 
         <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/main_btn_calibration"
             android:background="@drawable/menu"
             android:layout_width="316dp"
             android:layout_height="80dp"
@@ -81,13 +83,40 @@
                 android:layout_marginEnd="16dp"/>
         </androidx.constraintlayout.widget.ConstraintLayout>
 
-        <ImageView
-            android:layout_width="140dp"
-            android:layout_height="140dp"
-            app:layout_constraintStart_toStartOf="parent"
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/main_btn_back"
+            android:background="@drawable/menu_black"
+            android:layout_width="316dp"
+            android:layout_height="80dp"
             app:layout_constraintBottom_toBottomOf="parent"
-            android:layout_marginBottom="16dp"
-            android:src="@drawable/btn_back"/>
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginBottom="32dp"
+            android:layout_marginHorizontal="22dp">
+
+            <ImageView
+                android:id="@+id/main_iv_back"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:src="@drawable/back_icon"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                android:layout_marginStart="16dp"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/pretendard_semibold"
+                android:includeFontPadding="false"
+                android:text="뒤로가기"
+                android:textColor="#191919"
+                android:textSize="16sp"
+                android:layout_marginStart="16dp"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toEndOf="@id/main_iv_back"/>
+        </androidx.constraintlayout.widget.ConstraintLayout>
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <View
@@ -343,6 +372,13 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent">
 
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/main_gl_1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:layout_constraintGuide_percent="0.5" />
+
         <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="match_parent"
@@ -400,6 +436,24 @@
                     app:layout_constraintEnd_toEndOf="parent" />
             </androidx.constraintlayout.widget.ConstraintLayout>
         </androidx.cardview.widget.CardView>
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/main_btn_load"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="@id/main_gl_1"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"/>
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/main_btn_setting"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            app:layout_constraintStart_toStartOf="@id/main_gl_1"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"/>
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <ImageView
