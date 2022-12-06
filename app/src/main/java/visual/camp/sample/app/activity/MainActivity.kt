@@ -561,7 +561,7 @@ class MainActivity : AppCompatActivity() {
                             }
                         }
                     }else if(viewType=="setting"){ // 세팅 화면
-                        if(firstY>dpToPx(30F) && firstY<dpToPx(114F)){ // 초점 맟추기
+                        if(firstY>dpToPx(90F) && firstY<dpToPx(170F)){ // 초점 맟추기
                             Log.i("eye", "calibration")
                             startCalibration()
                         }else if(firstY>(screenHeight-dpToPx(234F)) &&firstY<(screenHeight-optionHeight)){ // 뒤로가기
