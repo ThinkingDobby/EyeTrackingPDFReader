@@ -52,6 +52,8 @@ class MainActivity : AppCompatActivity() {
     private var firstBlink = 0L
     private var posX = 0F
     private var posY = 0F
+    private var firstX = 0F
+    private var firstY = 0f
     private var count = 0
     private var viewType = "pdf"
 
@@ -521,6 +523,8 @@ class MainActivity : AppCompatActivity() {
 
             if (isBlink && count == 0) {// 첫번째 깜박임
                 firstBlink = System.nanoTime()
+                firstX = posX
+                firstY = posY
                 Log.i("count", "$count")
                 count = 1
 
@@ -533,24 +537,34 @@ class MainActivity : AppCompatActivity() {
 
                 Log.d("size", posY.toString())
                 if (timeDifference < 200000) {// 동시에 두번 깜박임 감지
-                    when (viewType){
-                        "pdf" -> runOnUiThread {
-                        if (posY < (screenHeight / 2)) pdfView!!.jumpTo(nowPage - 1) // 이전 페이지 이동
-                        else if(posY <(screenHeight-optionHeight)) pdfView!!.jumpTo(nowPage + 1) // 다음 페이지 이동
-                        else if(posX <(screenWidth / 2)) {
-                            viewType = "folder" // pdf 문서 불러오기
+                    Log.i("succes", "good")
+                    if(viewType=="pdf"){ // pdf 화면
+                        Log.i("pdf","pdf")
+                        runOnUiThread {
+                            if (firstY < (screenHeight / 2)) pdfView!!.jumpTo(nowPage - 1) // 이전 페이지 이동
+                            else if(firstY <(screenHeight-optionHeight)) pdfView!!.jumpTo(nowPage + 1) // 다음 페이지 이동
+                            else if(firstX <(screenWidth / 2)) {
+                                viewType = "folder" // pdf 문서 불러오기
+                            }
+                            else {  // 환경설정
+                                settingScreen!!.visibility = View.VISIBLE
+                                viewType = "setting"
+                            }
                         }
-                        else {  // 환경설정
-                            viewType = "setting"
-                         }
+                    }else if(viewType=="setting"){ // 세팅 화면
+                        if(firstY>dpToPx(30F) && firstY<dpToPx(114F)){ // 초점 맟추기
+                            startCalibration()
+                        }else if(firstY>(screenHeight-dpToPx(234F)) &&firstY<(screenHeight-optionHeight)){ // 뒤로가기
+                            stopCalibration()
+                            settingScreen!!.visibility = View.INVISIBLE
+                            viewType = "pdf"
+                        }else if(firstY>(screenHeight-optionHeight) && firstX<(screenWidth / 2)){
+                            viewType = "folder"
                         }
-                        "setting" -> runOnUiThread{
+                    }else{ // 문서 불러오기 화면
 
-                        }
-                        "folder" -> runOnUiThread{
-
-                        }
                     }
+               
                 }
                 count = 0
             }
