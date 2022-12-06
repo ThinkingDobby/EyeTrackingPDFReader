@@ -287,12 +287,16 @@ class MainActivity : AppCompatActivity() {
         setOffsetOfView()
         setViewAtGazeTrackerState()
 
-        btnLoad!!.setOnClickListener { getFileFromStorage() }
+        btnLoad!!.setOnClickListener {
+            getFileFromStorage()
+            settingScreen!!.visibility = View.INVISIBLE
+        }
         btnSetting!!.setOnClickListener {
+            viewType = "setting"
             settingScreen!!.visibility = View.VISIBLE
         }
         btnBack!!.setOnClickListener {
-
+            viewType = "pdf"
             settingScreen!!.visibility = View.INVISIBLE
         }
         btnCalibration!!.setOnClickListener {
@@ -550,12 +554,10 @@ class MainActivity : AppCompatActivity() {
                             if (firstY < (screenHeight / 2)) pdfView!!.jumpTo(nowPage - 1) // 이전 페이지 이동
                             else if(firstY <(screenHeight-optionHeight)) pdfView!!.jumpTo(nowPage + 1) // 다음 페이지 이동
                             else if(firstX <(screenWidth / 2)) { // pdf 문서 불러오기
-                                getFileFromStorage()
-                                viewType = "folder"
+                                btnLoad!!.callOnClick()
                             }
                             else {  // 환경설정
-                                settingScreen!!.visibility = View.VISIBLE
-                                viewType = "setting"
+                                btnSetting!!.callOnClick()
                             }
                         }
                     }else if(viewType=="setting"){ // 세팅 화면
@@ -563,12 +565,9 @@ class MainActivity : AppCompatActivity() {
                             Log.i("eye", "calibration")
                             startCalibration()
                         }else if(firstY>(screenHeight-dpToPx(234F)) &&firstY<(screenHeight-optionHeight)){ // 뒤로가기
-                            settingScreen!!.visibility = View.INVISIBLE
-                            viewType = "pdf"
+                            btnBack!!.callOnClick()
                         }else if(firstY>(screenHeight-optionHeight) && firstX<(screenWidth / 2)){ // pdf 문서 불러오기
-                            getFileFromStorage()
-                            settingScreen!!.visibility = View.INVISIBLE
-                            viewType = "folder"
+                            btnLoad!!.callOnClick()
                         }
                     }else{ // 문서 불러오기 화면
 
