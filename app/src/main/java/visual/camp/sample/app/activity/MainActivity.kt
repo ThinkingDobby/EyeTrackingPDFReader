@@ -67,7 +67,10 @@ class MainActivity : AppCompatActivity() {
         checkPermission()
         initHandler()
 
-        getFileFromStorage() // 저장소에서 pdf 파일 선택
+        GlobalScope.launch {
+            loading()
+            getFileFromStorage() // 저장소에서 pdf 파일 선택
+        }
 
         GlobalScope.launch {
             initGaze()
@@ -207,8 +210,9 @@ class MainActivity : AppCompatActivity() {
     private var viewEyeBlink: EyeBlinkView? = null
     private var viewAttention: AttentionView? = null
     private var viewDrowsiness: DrowsinessView? = null
+    private var loadingScreen: ConstraintLayout? = null
     private var settingScreen: ConstraintLayout? = null
-    private var loadScreen: ConstraintLayout? = null
+    private var fileLoadScreen: ConstraintLayout? = null
     private var btnLoad: ConstraintLayout? = null
     private var btnSetting: ConstraintLayout? = null
     private var btnBack: ConstraintLayout? = null
@@ -254,8 +258,8 @@ class MainActivity : AppCompatActivity() {
         swStatusAttention?.setChecked(isStatusAttention)
         swStatusDrowsiness?.setChecked(isStatusDrowsiness)
         pdfView = findViewById(R.id.main_pdfview)
+        loadingScreen = findViewById(R.id.main_cl_loading)
         settingScreen = findViewById(R.id.main_cl_setting)
-//        loadScreen = findViewById(R.id.)
         btnLoad = findViewById(R.id.main_btn_load)
         btnSetting = findViewById(R.id.main_btn_setting)
         btnBack = findViewById(R.id.main_btn_back)
@@ -288,10 +292,12 @@ class MainActivity : AppCompatActivity() {
             settingScreen!!.visibility = View.VISIBLE
         }
         btnBack!!.setOnClickListener {
-            stopCalibration()
+
             settingScreen!!.visibility = View.INVISIBLE
         }
-        btnCalibration!!.setOnClickListener { startCalibration() }
+        btnCalibration!!.setOnClickListener {
+            Log.i("eye", "calibration")
+            startCalibration() }
     }
 
     private val onCheckedChangeRadioButton =
@@ -536,15 +542,16 @@ class MainActivity : AppCompatActivity() {
                 Log.i("difference", "diffenece: $timeDifference")
 
                 Log.d("size", posY.toString())
-                if (timeDifference < 200000) {// 동시에 두번 깜박임 감지
+                if (timeDifference < 200000) { // 동시에 두번 깜박임 감지
                     Log.i("succes", "good")
                     if(viewType=="pdf"){ // pdf 화면
                         Log.i("pdf","pdf")
                         runOnUiThread {
                             if (firstY < (screenHeight / 2)) pdfView!!.jumpTo(nowPage - 1) // 이전 페이지 이동
                             else if(firstY <(screenHeight-optionHeight)) pdfView!!.jumpTo(nowPage + 1) // 다음 페이지 이동
-                            else if(firstX <(screenWidth / 2)) {
-                                viewType = "folder" // pdf 문서 불러오기
+                            else if(firstX <(screenWidth / 2)) { // pdf 문서 불러오기
+                                getFileFromStorage()
+                                viewType = "folder"
                             }
                             else {  // 환경설정
                                 settingScreen!!.visibility = View.VISIBLE
@@ -553,12 +560,14 @@ class MainActivity : AppCompatActivity() {
                         }
                     }else if(viewType=="setting"){ // 세팅 화면
                         if(firstY>dpToPx(30F) && firstY<dpToPx(114F)){ // 초점 맟추기
+                            Log.i("eye", "calibration")
                             startCalibration()
                         }else if(firstY>(screenHeight-dpToPx(234F)) &&firstY<(screenHeight-optionHeight)){ // 뒤로가기
-                            stopCalibration()
                             settingScreen!!.visibility = View.INVISIBLE
                             viewType = "pdf"
-                        }else if(firstY>(screenHeight-optionHeight) && firstX<(screenWidth / 2)){
+                        }else if(firstY>(screenHeight-optionHeight) && firstX<(screenWidth / 2)){ // pdf 문서 불러오기
+                            getFileFromStorage()
+                            settingScreen!!.visibility = View.INVISIBLE
                             viewType = "folder"
                         }
                     }else{ // 문서 불러오기 화면
@@ -661,6 +670,11 @@ class MainActivity : AppCompatActivity() {
         gazeTrackerManager!!.initGazeTracker(initializationCallback, userStatusOption)
         setStatusSwitchState(false)
         delay(2500)
+    }
+
+    private suspend fun loading() {
+        delay(2500)
+        loadingScreen!!.visibility = View.INVISIBLE
     }
 
     private fun releaseGaze() {

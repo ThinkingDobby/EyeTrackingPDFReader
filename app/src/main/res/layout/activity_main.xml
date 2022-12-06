@@ -456,6 +456,39 @@
             app:layout_constraintBottom_toBottomOf="parent"/>
     </androidx.constraintlayout.widget.ConstraintLayout>
 
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/main_cl_loading"
+        android:visibility="visible"
+        android:background="#fefefe"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+        
+        <ImageView
+            android:layout_width="140dp"
+            android:layout_height="140dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:src="@drawable/main_icon"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:text="잠시만 기다려주세요..."
+            android:textSize="14sp"
+            android:textColor="#191919"
+            android:fontFamily="@font/pretendard_regular"
+            android:layout_marginBottom="32dp"/>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
     <ImageView
         android:layout_width="match_parent"
         android:layout_height="20dp"
