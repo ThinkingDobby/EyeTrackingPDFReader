@@ -32,6 +32,7 @@ import camp.visual.gazetracker.util.ViewLayoutChecker
 import com.github.barteksc.pdfviewer.PDFView
 import com.github.barteksc.pdfviewer.scroll.DefaultScrollHandle
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -57,6 +58,7 @@ class MainActivity : AppCompatActivity() {
     private var firstY = 0f
     private var check = false
     private var viewType = "pdf"
+    private var autoScrollThread: Job? = null
 
     private var autoScroll = false
 
@@ -225,7 +227,6 @@ class MainActivity : AppCompatActivity() {
     private var tvExpand: TextView? = null
     private var btnAutoScroll: ConstraintLayout? = null
 
-
     // gaze coord filter
     private var swUseGazeFilter: SwitchCompat? = null
     private var swStatusBlink: SwitchCompat? = null
@@ -304,6 +305,9 @@ class MainActivity : AppCompatActivity() {
         btnSetting!!.setOnClickListener {
             viewType = "setting"
             settingScreen!!.visibility = View.VISIBLE
+            runBlocking {
+                if(autoScrollThread !=null) autoScrollThread!!.cancel()
+            }
         }
         btnBack!!.setOnClickListener {
             viewType = "pdf"
@@ -311,10 +315,8 @@ class MainActivity : AppCompatActivity() {
 
             autoScroll = tvAutoScroll!!.text == "ON"
             if (autoScroll) {
-
                 var nowPage = 0
-
-                GlobalScope.launch {
+                autoScrollThread = GlobalScope.launch() {
                     while (autoScroll) {
                         delay(1000)
                         runOnUiThread {
@@ -322,7 +324,6 @@ class MainActivity : AppCompatActivity() {
                         }
                     }
                 }
-
             }
         }
         btnAutoScroll!!.setOnClickListener {
@@ -603,6 +604,7 @@ class MainActivity : AppCompatActivity() {
                             else if (firstX < (screenWidth / 2)) { // pdf 문서 불러오기
                                 btnLoad!!.callOnClick()
                             } else {  // 환경설정
+
                                 btnSetting!!.callOnClick()
                             }
                         }
