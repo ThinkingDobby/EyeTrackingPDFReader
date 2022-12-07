@@ -34,6 +34,7 @@ import com.github.barteksc.pdfviewer.scroll.DefaultScrollHandle
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import visual.camp.sample.app.GazeTrackerManager
 import visual.camp.sample.app.GazeTrackerManager.LoadCalibrationResult
 import visual.camp.sample.app.R
@@ -302,8 +303,9 @@ class MainActivity : AppCompatActivity() {
         }
         btnCalibration!!.setOnClickListener {
             Log.i("eye", "calibration")
-            startCalibration()
-        }
+
+            viewType = "cali"
+            startCalibration() }
     }
 
     private val onCheckedChangeRadioButton =
@@ -474,6 +476,8 @@ class MainActivity : AppCompatActivity() {
         private get() = gazeTrackerManager!!.hasGazeTracker()
     private val isTracking: Boolean
         private get() = gazeTrackerManager!!.isTracking
+    private val isCalibrating: Boolean
+        private get() = gazeTrackerManager!!.isCalibrating
     private val initializationCallback = InitializationCallback { gazeTracker, error ->
         if (gazeTracker != null) {
             initSuccess(gazeTracker)
@@ -523,16 +527,27 @@ class MainActivity : AppCompatActivity() {
             isBlink: Boolean,
             eyeOpenness: Float
         ) {
+
+            Log.i("focus", currentFocus.toString())
+            if (!isCalibrating && viewType == "cali") {
+                GlobalScope.launch {
+                    delay(1000)
+                    viewType = "setting"
+                }
+            }
+
             viewEyeBlink!!.setLeftEyeBlink(isBlinkLeft)
             viewEyeBlink!!.setRightEyeBlink(isBlinkRight)
             viewEyeBlink!!.setEyeBlink(isBlink)
 
             val screenWidth = resources.displayMetrics.widthPixels
             val screenHeight = resources.displayMetrics.heightPixels
-            val optionHeight = dpToPx(dp = 120F)
+            val optionHeight = dpToPx(dp = 90F)
+
 
             val nowPage = pdfView!!.currentPage
 
+            Log.i("viewType", "$viewType")
             if (isBlink && !check) {// 첫번째 깜박임
                 firstBlink = System.nanoTime()
                 firstX = posX
@@ -702,6 +717,7 @@ class MainActivity : AppCompatActivity() {
         setViewAtGazeTrackerState()
         return isSuccess
     }
+
 
     // Collect the data samples used for calibration
     private fun startCollectSamples(): Boolean {
