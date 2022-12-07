@@ -55,8 +55,9 @@ class MainActivity : AppCompatActivity() {
     private var posY = 0F
     private var firstX = 0F
     private var firstY = 0f
-    private var count = 0
+    private var check = false
     private var viewType = "pdf"
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -302,6 +303,7 @@ class MainActivity : AppCompatActivity() {
         }
         btnCalibration!!.setOnClickListener {
             Log.i("eye", "calibration")
+
             viewType = "cali"
             startCalibration() }
     }
@@ -540,70 +542,69 @@ class MainActivity : AppCompatActivity() {
 
             val screenWidth = resources.displayMetrics.widthPixels
             val screenHeight = resources.displayMetrics.heightPixels
+            val optionHeight = dpToPx(dp = 90F)
 
-            val optionHeight = dpToPx(dp=90F)
+
             val nowPage = pdfView!!.currentPage
+
             Log.i("viewType", "$viewType")
-            if (isBlink && count == 0) {// 첫번째 깜박임
+            if (isBlink && !check) {// 첫번째 깜박임
                 firstBlink = System.nanoTime()
                 firstX = posX
                 firstY = posY
-                Log.i("count", "$count")
-                count = 1
-
-            } else if (isBlink && count == 1) {// 두번째 깜박임
-                var secondBlink = 0L
-                secondBlink = System.nanoTime()
-                var timeDifference = secondBlink - firstBlink// 깜박임 시간 차 계산
-                Log.i("count", "$count")
+                check = true
+            } else if (isBlink && check) {// 두번째 깜박임
+                val secondBlink = System.nanoTime()
+                val timeDifference = secondBlink - firstBlink// 깜박임 시간 차 계산
                 Log.i("difference", "diffenece: $timeDifference")
 
-                Log.d("size", posY.toString())
                 if (timeDifference < 200000) { // 동시에 두번 깜박임 감지
-                    Log.i("succes", "good")
-                    if(viewType=="pdf"){ // pdf 화면
-                        Log.i("pdf","pdf")
+                    if (viewType == "pdf") { // pdf 화면
+                        Log.i("viewType", "pdf")
                         runOnUiThread {
-                            if (firstY < (screenHeight / 2)) {
-                                Log.i("jump", "jump -")
-                                pdfView!!.jumpTo(nowPage - 1)
-                            } // 이전 페이지 이동}
-                            else if(firstY <(screenHeight-optionHeight)) {
-                                Log.i("jump", "jump +")
-                                pdfView!!.jumpTo(nowPage + 1) // 다음 페이지 이동
-                            }
-                            else if(firstX <(screenWidth / 2)) { // pdf 문서 불러오기
+                            if (firstY < ((screenHeight - optionHeight) / 2)) pdfView!!.jumpTo(
+                                nowPage - 1
+                            ) // 이전 페이지 이동
+                            else if (firstY < (screenHeight - optionHeight)) pdfView!!.jumpTo(
+                                nowPage + 1
+                            ) // 다음 페이지 이동
+                            else if (firstX < (screenWidth / 2)) { // pdf 문서 불러오기
                                 btnLoad!!.callOnClick()
-                            }
-                            else {  // 환경설정
+                            } else {  // 환경설정
                                 btnSetting!!.callOnClick()
                             }
                         }
-                    }else if(viewType=="setting"){ // 세팅 화면
-                        if(firstY>dpToPx(85F) && firstY<dpToPx(175F)){ // 초점 맟추기
+                    } else if (viewType == "setting") { // 세팅 화면
+                        Log.i("viewType", "setting")
+                        if (firstY > dpToPx(85F) && firstY < dpToPx(175F)) { // 초점 맟추기
                             btnCalibration!!.callOnClick()
-                        }else if(firstY>(screenHeight-dpToPx(234F)) &&firstY<(screenHeight-optionHeight)){ // 뒤로가기
+                        } else if (firstY > (screenHeight - dpToPx(237F)) && firstY < (screenHeight - optionHeight)) { // 뒤로가기
                             btnBack!!.callOnClick()
-                        }else if(firstY>(screenHeight-optionHeight) && firstX<(screenWidth / 2)){ // pdf 문서 불러오기
+                        } else if (firstY > (screenHeight - optionHeight) && firstX < (screenWidth / 2)) { // pdf 문서 불러오기
                             btnLoad!!.callOnClick()
                         }
-                    }else{ // 문서 불러오기 화면
+                    } else { // 문서 불러오기 화면
 
                     }
-               
+                    check = false
+                } else {
+                    firstBlink = System.nanoTime()
+                    firstX = posX
+                    firstY = posY
+                    check = true
                 }
-                count = 0
             }
         }
 
-        fun dpToPx(dp: Float): Float {
-            return TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp, resources.displayMetrics)
-        }
 
         override fun onDrowsiness(timestamp: Long, isDrowsiness: Boolean) {
             Log.i(TAG, "check User Status Drowsiness $isDrowsiness")
             viewDrowsiness!!.setDrowsiness(isDrowsiness)
         }
+    }
+
+    private fun dpToPx(dp: Float): Float {
+        return TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp, resources.displayMetrics)
     }
 
     // 시선 위치 좌표 표현
