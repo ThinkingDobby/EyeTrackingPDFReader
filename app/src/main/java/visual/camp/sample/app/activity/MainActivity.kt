@@ -225,6 +225,7 @@ class MainActivity : AppCompatActivity() {
     private var btnCalibration: ConstraintLayout? = null
     private var tvAutoScroll: TextView? = null
     private var tvExpand: TextView? = null
+    private var btnExpand: ConstraintLayout? = null
     private var btnAutoScroll: ConstraintLayout? = null
 
     // gaze coord filter
@@ -275,6 +276,7 @@ class MainActivity : AppCompatActivity() {
         tvAutoScroll = findViewById(R.id.main_tv_auto_scroll)
         tvExpand = findViewById(R.id.main_tv_expand)
         btnAutoScroll = findViewById(R.id.main_btn_auto_scroll)
+        btnExpand = findViewById(R.id.main_btn_expand)
 
         val rbCalibrationOne = findViewById<RadioButton>(R.id.rb_calibration_one)
         val rbCalibrationFive = findViewById<RadioButton>(R.id.rb_calibration_five)
@@ -338,6 +340,15 @@ class MainActivity : AppCompatActivity() {
 
             viewType = "cali"
             startCalibration()
+        }
+        btnExpand!!.setOnClickListener{
+            if (pdfView!!.zoom < pdfView!!.midZoom) {
+                pdfView!!.zoomWithAnimation(0F, 0F, pdfView!!.midZoom);
+            } else if (pdfView!!.zoom < pdfView!!.maxZoom) {
+                pdfView!!.zoomWithAnimation(0F, 0F, pdfView!!.maxZoom);
+            } else {
+                pdfView!!.resetZoomWithAnimation();
+            }
         }
     }
 
@@ -589,7 +600,7 @@ class MainActivity : AppCompatActivity() {
             } else if (isBlink && check) {// 두번째 깜박임
                 val secondBlink = System.nanoTime()
                 val timeDifference = secondBlink - firstBlink// 깜박임 시간 차 계산
-                Log.i("difference", "diffenece: $timeDifference")
+                Log.i("difference", "difference: $timeDifference")
 
                 if (timeDifference < 200000) { // 동시에 두번 깜박임 감지
                     if (viewType == "pdf") { // pdf 화면
