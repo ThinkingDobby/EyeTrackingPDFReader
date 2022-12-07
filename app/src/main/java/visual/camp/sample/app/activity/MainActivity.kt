@@ -34,6 +34,7 @@ import com.github.barteksc.pdfviewer.scroll.DefaultScrollHandle
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import visual.camp.sample.app.GazeTrackerManager
 import visual.camp.sample.app.GazeTrackerManager.LoadCalibrationResult
 import visual.camp.sample.app.R
@@ -301,6 +302,7 @@ class MainActivity : AppCompatActivity() {
         }
         btnCalibration!!.setOnClickListener {
             Log.i("eye", "calibration")
+            viewType = "cali"
             startCalibration() }
     }
 
@@ -472,6 +474,8 @@ class MainActivity : AppCompatActivity() {
         private get() = gazeTrackerManager!!.hasGazeTracker()
     private val isTracking: Boolean
         private get() = gazeTrackerManager!!.isTracking
+    private val isCalibrating: Boolean
+        private get() = gazeTrackerManager!!.isCalibrating
     private val initializationCallback = InitializationCallback { gazeTracker, error ->
         if (gazeTracker != null) {
             initSuccess(gazeTracker)
@@ -521,6 +525,15 @@ class MainActivity : AppCompatActivity() {
             isBlink: Boolean,
             eyeOpenness: Float
         ) {
+
+            Log.i("focus", currentFocus.toString())
+            if (!isCalibrating && viewType == "cali") {
+                GlobalScope.launch {
+                    delay(1000)
+                    viewType = "setting"
+                }
+            }
+
             viewEyeBlink!!.setLeftEyeBlink(isBlinkLeft)
             viewEyeBlink!!.setRightEyeBlink(isBlinkRight)
             viewEyeBlink!!.setEyeBlink(isBlink)
@@ -528,9 +541,9 @@ class MainActivity : AppCompatActivity() {
             val screenWidth = resources.displayMetrics.widthPixels
             val screenHeight = resources.displayMetrics.heightPixels
 
-            val optionHeight = dpToPx(dp=120F)
+            val optionHeight = dpToPx(dp=90F)
             val nowPage = pdfView!!.currentPage
-
+            Log.i("viewType", "$viewType")
             if (isBlink && count == 0) {// 첫번째 깜박임
                 firstBlink = System.nanoTime()
                 firstX = posX
@@ -551,8 +564,14 @@ class MainActivity : AppCompatActivity() {
                     if(viewType=="pdf"){ // pdf 화면
                         Log.i("pdf","pdf")
                         runOnUiThread {
-                            if (firstY < (screenHeight / 2)) pdfView!!.jumpTo(nowPage - 1) // 이전 페이지 이동
-                            else if(firstY <(screenHeight-optionHeight)) pdfView!!.jumpTo(nowPage + 1) // 다음 페이지 이동
+                            if (firstY < (screenHeight / 2)) {
+                                Log.i("jump", "jump -")
+                                pdfView!!.jumpTo(nowPage - 1)
+                            } // 이전 페이지 이동}
+                            else if(firstY <(screenHeight-optionHeight)) {
+                                Log.i("jump", "jump +")
+                                pdfView!!.jumpTo(nowPage + 1) // 다음 페이지 이동
+                            }
                             else if(firstX <(screenWidth / 2)) { // pdf 문서 불러오기
                                 btnLoad!!.callOnClick()
                             }
@@ -561,9 +580,8 @@ class MainActivity : AppCompatActivity() {
                             }
                         }
                     }else if(viewType=="setting"){ // 세팅 화면
-                        if(firstY>dpToPx(30F) && firstY<dpToPx(114F)){ // 초점 맟추기
-                            Log.i("eye", "calibration")
-                            startCalibration()
+                        if(firstY>dpToPx(85F) && firstY<dpToPx(175F)){ // 초점 맟추기
+                            btnCalibration!!.callOnClick()
                         }else if(firstY>(screenHeight-dpToPx(234F)) &&firstY<(screenHeight-optionHeight)){ // 뒤로가기
                             btnBack!!.callOnClick()
                         }else if(firstY>(screenHeight-optionHeight) && firstX<(screenWidth / 2)){ // pdf 문서 불러오기
@@ -698,6 +716,7 @@ class MainActivity : AppCompatActivity() {
         setViewAtGazeTrackerState()
         return isSuccess
     }
+
 
     // Collect the data samples used for calibration
     private fun startCollectSamples(): Boolean {
