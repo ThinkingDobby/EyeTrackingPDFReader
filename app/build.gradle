@@ -2,8 +2,10 @@ apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 
 android {
-    compileSdkVersion 31
-    buildToolsVersion "30.0.3"
+    buildToolsVersion rootProject.buildToolsVersion
+    compileSdkVersion rootProject.compileSdkVersion
+//    compileSdkVersion 31
+//    buildToolsVersion "30.0.3"
 
     defaultConfig {
         applicationId "camp.visual.android.sample.seesosample"

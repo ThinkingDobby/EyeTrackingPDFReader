@@ -75,7 +75,9 @@ class MainActivity : AppCompatActivity() {
 
         GlobalScope.launch {
             loading()
-            getFileFromStorage() // 저장소에서 pdf 파일 선택
+            runOnUiThread {
+                btnLoad!!.callOnClick()
+            }
         }
 
         GlobalScope.launch {
@@ -227,6 +229,8 @@ class MainActivity : AppCompatActivity() {
     private var tvExpand: TextView? = null
     private var btnExpand: ConstraintLayout? = null
     private var btnAutoScroll: ConstraintLayout? = null
+    private var firstFile: ConstraintLayout? = null
+    private var secondFile: ConstraintLayout? = null
 
     // gaze coord filter
     private var swUseGazeFilter: SwitchCompat? = null
@@ -277,6 +281,9 @@ class MainActivity : AppCompatActivity() {
         tvExpand = findViewById(R.id.main_tv_expand)
         btnAutoScroll = findViewById(R.id.main_btn_auto_scroll)
         btnExpand = findViewById(R.id.main_btn_expand)
+        fileLoadScreen = findViewById(R.id.main_cl_file_load)
+        firstFile = findViewById(R.id.main_cl_file_first)
+        secondFile = findViewById(R.id.main_cl_file_second)
 
         val rbCalibrationOne = findViewById<RadioButton>(R.id.rb_calibration_one)
         val rbCalibrationFive = findViewById<RadioButton>(R.id.rb_calibration_five)
@@ -301,7 +308,8 @@ class MainActivity : AppCompatActivity() {
         setViewAtGazeTrackerState()
 
         btnLoad!!.setOnClickListener {
-            getFileFromStorage()
+            viewType = "load"
+            fileLoadScreen!!.visibility = View.VISIBLE
             settingScreen!!.visibility = View.INVISIBLE
         }
         btnSetting!!.setOnClickListener {
@@ -349,6 +357,17 @@ class MainActivity : AppCompatActivity() {
             } else {
                 pdfView!!.resetZoomWithAnimation();
             }
+        }
+
+        firstFile!!.setOnClickListener {
+            viewType = "pdf"
+            fileLoadScreen!!.visibility = View.INVISIBLE
+
+        }
+        secondFile!!.setOnClickListener {
+            viewType = "pdf"
+            fileLoadScreen!!.visibility = View.INVISIBLE
+
         }
     }
 
@@ -615,7 +634,6 @@ class MainActivity : AppCompatActivity() {
                             else if (firstX < (screenWidth / 2)) { // pdf 문서 불러오기
                                 btnLoad!!.callOnClick()
                             } else {  // 환경설정
-
                                 btnSetting!!.callOnClick()
                             }
                         }
@@ -628,8 +646,7 @@ class MainActivity : AppCompatActivity() {
                         } else if (firstY > (screenHeight - optionHeight) && firstX < (screenWidth / 2)) { // pdf 문서 불러오기
                             btnLoad!!.callOnClick()
                         }
-                    } else { // 문서 불러오기 화면
-
+                    } else if (viewType == "load"){
                     }
                     check = false
                 } else {
