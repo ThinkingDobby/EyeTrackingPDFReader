@@ -40,6 +40,7 @@ import visual.camp.sample.app.GazeTrackerManager
 import visual.camp.sample.app.GazeTrackerManager.LoadCalibrationResult
 import visual.camp.sample.app.R
 import visual.camp.sample.view.*
+import java.io.File
 
 
 class MainActivity : AppCompatActivity() {
@@ -231,6 +232,8 @@ class MainActivity : AppCompatActivity() {
     private var btnAutoScroll: ConstraintLayout? = null
     private var firstFile: ConstraintLayout? = null
     private var secondFile: ConstraintLayout? = null
+    lateinit var firstFileTitle : TextView
+    lateinit var secondFileTitle : TextView
 
     // gaze coord filter
     private var swUseGazeFilter: SwitchCompat? = null
@@ -284,6 +287,8 @@ class MainActivity : AppCompatActivity() {
         fileLoadScreen = findViewById(R.id.main_cl_file_load)
         firstFile = findViewById(R.id.main_cl_file_first)
         secondFile = findViewById(R.id.main_cl_file_second)
+        firstFileTitle = findViewById(R.id.main_tv_file_first_title)
+        secondFileTitle = findViewById(R.id.main_tv_file_second_title)
 
         val rbCalibrationOne = findViewById<RadioButton>(R.id.rb_calibration_one)
         val rbCalibrationFive = findViewById<RadioButton>(R.id.rb_calibration_five)
@@ -308,15 +313,17 @@ class MainActivity : AppCompatActivity() {
         setViewAtGazeTrackerState()
 
         btnLoad!!.setOnClickListener {
-            viewType = "load"
-            fileLoadScreen!!.visibility = View.VISIBLE
-            settingScreen!!.visibility = View.INVISIBLE
+            runOnUiThread {
+                viewType = "load"
+                fileLoadScreen!!.visibility = View.VISIBLE
+                settingScreen!!.visibility = View.INVISIBLE
+            }
         }
         btnSetting!!.setOnClickListener {
             viewType = "setting"
             settingScreen!!.visibility = View.VISIBLE
             runBlocking {
-                if(autoScrollThread !=null) autoScrollThread!!.cancel()
+                if(autoScrollThread != null) autoScrollThread!!.cancel()
             }
         }
         btnBack!!.setOnClickListener {
@@ -337,10 +344,12 @@ class MainActivity : AppCompatActivity() {
             }
         }
         btnAutoScroll!!.setOnClickListener {
-            if (tvAutoScroll!!.text == "ON") {
-                tvAutoScroll!!.text = "OFF"
-            } else {
-                tvAutoScroll!!.text = "ON"
+            runOnUiThread {
+                if (tvAutoScroll!!.text == "ON") {
+                    tvAutoScroll!!.text = "OFF"
+                } else {
+                    tvAutoScroll!!.text = "ON"
+                }
             }
         }
         btnCalibration!!.setOnClickListener {
@@ -349,26 +358,63 @@ class MainActivity : AppCompatActivity() {
             viewType = "cali"
             startCalibration()
         }
-        btnExpand!!.setOnClickListener{
-            if (pdfView!!.zoom < pdfView!!.midZoom) {
-                pdfView!!.zoomWithAnimation(0F, 0F, pdfView!!.midZoom);
-            } else if (pdfView!!.zoom < pdfView!!.maxZoom) {
-                pdfView!!.zoomWithAnimation(0F, 0F, pdfView!!.maxZoom);
-            } else {
-                pdfView!!.resetZoomWithAnimation();
+        pdfView!!.midZoom = 1.2F
+        pdfView!!.maxZoom = 1.5F
+        val screenWidth = resources.displayMetrics.widthPixels
+        val screenHeight = resources.displayMetrics.heightPixels
+        /** 확대축소 버튼 클릭리스너 **/
+        btnExpand!!.setOnClickListener {
+            runOnUiThread {
+                if (pdfView!!.zoom < pdfView!!.midZoom) {
+                    pdfView!!.zoomWithAnimation(
+                        (screenWidth / 2).toFloat(),
+                        (screenHeight / 2).toFloat(), pdfView!!.midZoom
+                    );
+                    tvExpand!!.text = "120%"
+                } else if (pdfView!!.zoom < pdfView!!.maxZoom) {
+                    pdfView!!.zoomWithAnimation(
+                        (screenWidth / 2).toFloat(),
+                        (screenHeight / 2).toFloat(), pdfView!!.maxZoom
+                    );
+                    tvExpand!!.text = "150%"
+                } else {
+                    pdfView!!.resetZoomWithAnimation();
+                    tvExpand!!.text = "100%"
+                }
             }
         }
 
         firstFile!!.setOnClickListener {
             viewType = "pdf"
             fileLoadScreen!!.visibility = View.INVISIBLE
-
+            var uri = getFileAbsolutePath(firstFileTitle.text.toString())
+            Log.e("file", firstFileTitle.text.toString())
+            if (uri != null) {
+                Log.e("file", uri.name)
+                displayPDFFromFile(uri, 0)
+            }else{
+                Log.e("file", "null")
+            }
         }
         secondFile!!.setOnClickListener {
             viewType = "pdf"
             fileLoadScreen!!.visibility = View.INVISIBLE
-
+            var uri = getFileAbsolutePath(secondFileTitle.text.toString())
+            if (uri != null) {
+                displayPDFFromFile(uri, 0)
+            }else{
+                Log.e("file", "null")
+            }
         }
+    }
+
+    private fun getFileAbsolutePath(filename : String): File? {
+        File("/data/data/camp.visual.android.sample.seesosample").walk().forEach {
+            if(it.name.contains(filename)){
+                return it
+            }
+        }
+        return null
     }
 
     private val onCheckedChangeRadioButton =
@@ -605,7 +651,7 @@ class MainActivity : AppCompatActivity() {
 
             val screenWidth = resources.displayMetrics.widthPixels
             val screenHeight = resources.displayMetrics.heightPixels
-            val optionHeight = dpToPx(dp = 90F)
+            val optionHeight = dpToPx(dp = 60F)
 
 
             val nowPage = pdfView!!.currentPage
@@ -639,14 +685,19 @@ class MainActivity : AppCompatActivity() {
                         }
                     } else if (viewType == "setting") { // 세팅 화면
                         Log.i("viewType", "setting")
-                        if (firstY > dpToPx(85F) && firstY < dpToPx(200F)) { // 초점 맟추기
+                        Log.i("locaiont", "$firstY")
+                        if (firstY > dpToPx(155F) && firstY < dpToPx(260F)) { // 초점 맟추기
                             btnCalibration!!.callOnClick()
-                        } else if (firstY > (screenHeight - dpToPx(237F)) && firstY < (screenHeight - optionHeight)) { // 뒤로가기
+                        } else if (firstY > dpToPx(260F) && firstY<dpToPx(371F)) { // 화면 확대
+                            btnExpand!!.callOnClick()
+                        } else if (firstY > dpToPx(371F) && firstY<dpToPx(475F)) { // 자동 스크롤
+                            btnAutoScroll!!.callOnClick()
+                        } else if (firstY > (screenHeight - dpToPx(160F)) && firstY < (screenHeight - optionHeight)) { // 뒤로가기
                             btnBack!!.callOnClick()
                         } else if (firstY > (screenHeight - optionHeight) && firstX < (screenWidth / 2)) { // pdf 문서 불러오기
                             btnLoad!!.callOnClick()
                         }
-                    } else if (viewType == "load"){
+                    } else if (viewType == "load") {
                     }
                     check = false
                 } else {
@@ -700,7 +751,7 @@ class MainActivity : AppCompatActivity() {
         override fun onCalibrationNextPoint(x: Float, y: Float) {
             setCalibrationPoint(x, y)
             // Give time to eyes find calibration coordinates, then collect data samples
-            backgroundHandler!!.postDelayed({ startCollectSamples() }, 1000)
+            backgroundHandler!!.postDelayed({ startCollectSamples() }, 3000)
         }
 
         override fun onCalibrationFinished(calibrationData: DoubleArray) {
@@ -830,6 +881,18 @@ class MainActivity : AppCompatActivity() {
                 Log.d("uri", pdfFileUri.toString())
             }
         }
+    }
+
+    private fun displayPDFFromFile(file : File, pageNumber: Int) {
+        pdfView!!.fromFile(file)
+            .defaultPage(pageNumber)
+//            .onPageChange(this)
+            .enableAnnotationRendering(true)
+//            .onLoad(this)
+            .scrollHandle(DefaultScrollHandle(this))
+            .spacing(10) // in dp
+//            .onPageError(this)
+            .load()
     }
 
     private fun displayPDFFromUri(uri: Uri, pageNumber: Int) {
