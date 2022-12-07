@@ -58,6 +58,8 @@ class MainActivity : AppCompatActivity() {
     private var check = false
     private var viewType = "pdf"
 
+    private var autoScroll = false
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -219,6 +221,9 @@ class MainActivity : AppCompatActivity() {
     private var btnSetting: ConstraintLayout? = null
     private var btnBack: ConstraintLayout? = null
     private var btnCalibration: ConstraintLayout? = null
+    private var tvAutoScroll: TextView? = null
+    private var tvExpand: TextView? = null
+    private var btnAutoScroll: ConstraintLayout? = null
 
 
     // gaze coord filter
@@ -266,6 +271,9 @@ class MainActivity : AppCompatActivity() {
         btnSetting = findViewById(R.id.main_btn_setting)
         btnBack = findViewById(R.id.main_btn_back)
         btnCalibration = findViewById(R.id.main_btn_calibration)
+        tvAutoScroll = findViewById(R.id.main_tv_auto_scroll)
+        tvExpand = findViewById(R.id.main_tv_expand)
+        btnAutoScroll = findViewById(R.id.main_btn_auto_scroll)
 
         val rbCalibrationOne = findViewById<RadioButton>(R.id.rb_calibration_one)
         val rbCalibrationFive = findViewById<RadioButton>(R.id.rb_calibration_five)
@@ -300,12 +308,36 @@ class MainActivity : AppCompatActivity() {
         btnBack!!.setOnClickListener {
             viewType = "pdf"
             settingScreen!!.visibility = View.INVISIBLE
+
+            autoScroll = tvAutoScroll!!.text == "ON"
+            if (autoScroll) {
+
+                var nowPage = 0
+
+                GlobalScope.launch {
+                    while (autoScroll) {
+                        delay(1000)
+                        runOnUiThread {
+                            pdfView!!.jumpTo(nowPage++)
+                        }
+                    }
+                }
+
+            }
+        }
+        btnAutoScroll!!.setOnClickListener {
+            if (tvAutoScroll!!.text == "ON") {
+                tvAutoScroll!!.text = "OFF"
+            } else {
+                tvAutoScroll!!.text = "ON"
+            }
         }
         btnCalibration!!.setOnClickListener {
             Log.i("eye", "calibration")
 
             viewType = "cali"
-            startCalibration() }
+            startCalibration()
+        }
     }
 
     private val onCheckedChangeRadioButton =
@@ -576,7 +608,7 @@ class MainActivity : AppCompatActivity() {
                         }
                     } else if (viewType == "setting") { // 세팅 화면
                         Log.i("viewType", "setting")
-                        if (firstY > dpToPx(85F) && firstY < dpToPx(175F)) { // 초점 맟추기
+                        if (firstY > dpToPx(85F) && firstY < dpToPx(200F)) { // 초점 맟추기
                             btnCalibration!!.callOnClick()
                         } else if (firstY > (screenHeight - dpToPx(237F)) && firstY < (screenHeight - optionHeight)) { // 뒤로가기
                             btnBack!!.callOnClick()
@@ -662,6 +694,7 @@ class MainActivity : AppCompatActivity() {
                 when (error) {
                     StatusErrorType.ERROR_CAMERA_START ->                         // When if camera stream can't start
                         showToast("ERROR_CAMERA_START ", false)
+
                     StatusErrorType.ERROR_CAMERA_INTERRUPT ->                         // When if camera stream interrupted
                         showToast("ERROR_CAMERA_INTERRUPT ", false)
                 }
@@ -741,6 +774,7 @@ class MainActivity : AppCompatActivity() {
                 "Calibration data is null",
                 true
             )
+
             LoadCalibrationResult.FAIL_HAS_NO_TRACKER -> showToast(
                 "No tracker has initialized",
                 true
