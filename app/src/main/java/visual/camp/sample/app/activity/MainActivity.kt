@@ -667,7 +667,7 @@ class MainActivity : AppCompatActivity() {
                 val timeDifference = secondBlink - firstBlink// 깜박임 시간 차 계산
                 Log.i("difference", "difference: $timeDifference")
 
-                if (timeDifference < 200000) { // 동시에 두번 깜박임 감지
+                if (timeDifference < 2500000000) { // 동시에 두번 깜박임 감지
                     if (viewType == "pdf") { // pdf 화면
                         Log.i("viewType", "pdf")
                         runOnUiThread {
@@ -698,6 +698,11 @@ class MainActivity : AppCompatActivity() {
                             btnLoad!!.callOnClick()
                         }
                     } else if (viewType == "load") {
+                        if (firstY > dpToPx(145F) && firstY < dpToPx(235F)) { // 첫번째 파일
+                            firstFile!!.callOnClick()
+                        }else if(firstY > dpToPx(235F) && firstY < dpToPx(325F)){ // 두번째 파일
+                            secondFile!!.callOnClick()
+                        }
                     }
                     check = false
                 } else {
