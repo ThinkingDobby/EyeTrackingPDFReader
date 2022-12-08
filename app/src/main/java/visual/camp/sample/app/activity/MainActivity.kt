@@ -762,7 +762,7 @@ class MainActivity : AppCompatActivity() {
         override fun onCalibrationFinished(calibrationData: DoubleArray) {
             // When calibration is finished, calibration data is stored to SharedPreference
             hideCalibrationView()
-            showToast("calibrationFinished", true)
+            showToast("초점 보정 완료", true)
         }
     }
     private val statusCallback: StatusCallback = object : StatusCallback {
@@ -920,5 +920,17 @@ class MainActivity : AppCompatActivity() {
             Manifest.permission.WRITE_EXTERNAL_STORAGE
         )
         private const val REQ_PERMISSION = 1000
+    }
+
+    override fun onBackPressed() {
+        if (viewType == "pdf") super.onBackPressed()
+        else if (viewType == "setting") btnBack!!.callOnClick()
+        else if (viewType == "cali") {
+            stopCalibration()
+            viewType = "setting"
+        } else if (viewType == "load") {
+            viewType = "pdf"
+            fileLoadScreen!!.visibility = View.INVISIBLE
+        }
     }
 }
